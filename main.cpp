@@ -1,54 +1,99 @@
 #include <iostream>
 #include <cassert>
 #include <string>
-typedef std::basic_string<unsigned char> ustring;
+#include <stdio.h>
+#include <stdlib.h>
+#include <cmath>
+#include <vector>
 
+char *convertToBitArray(char *data, int length) {
+    char *bitData = new char[length * sizeof(char)];
 
-typedef unsigned short CheckSum;
-CheckSum CalculateChecksum(const unsigned char* chars, int size)
-{
-    auto bytes = reinterpret_cast<const CheckSum*>(chars);
-    CheckSum checkSum = 0;
-    unsigned int even = size / sizeof(checkSum);
-
-    for (unsigned int i = 0; i < even; i++)
-    {
-        checkSum += bytes[i];
+    for (int i = 0; i < length; ++i) {
+        printf("\n%d", data[i]);
+        for (int bit = 0; bit < 8; ++bit) {
+            bitData[(i * 8) + bit] = (unsigned char) ((data[i] << bit)) >> 7;
+        }
     }
-
-    unsigned int oddBytes = (size - even * sizeof(checkSum));
-
-    if (oddBytes > 0)
-    {
-        int lastPart = *(reinterpret_cast<const int *>(&chars[size - oddBytes]));
-        checkSum += lastPart;
-    }
-
-    return checkSum;
+    return bitData;
 }
 
-int main()
-{
-    ustring data;
-    //std::cin >> data;
+int *decomposeValues(int value, int &cont) {
+    int bitAmount = floor(log2(value)) + 1;
+    int *decomposed = new int[bitAmount];
+    printf("\ndecomposing: %d", value);
+    cont = 0;
+    for (int i = 0; value > 0; i++) {
+        int b = value % 2;
+        if (b == 1) {
+            decomposed[cont++] = pow(2, i);
+            printf("\ndec: %d", decomposed[cont]);
+        }
+        value = value / 2;
+    }
+    return decomposed;
+}
 
-    auto checksum = CalculateChecksum(data.c_str(), data.size());
-    auto invertedCheckSum = (CheckSum)~0U - checksum;
+int main() {
+    int length = 0;
+    printf("\nInsert desired length: ");
+    scanf("%d", &length);
+    char *data = new char[length];
+    printf("\nInsert data: ");
+    scanf("%s", data);
 
-    //data.append(sizeof(checksum), checksum);
+    char *bitData = convertToBitArray(data, length);
+    for (int i = 0; i < length * 8; ++i) {
+        printf("\n%d", bitData[i]);
+    }
+    int verifyingBits = ceil(sqrt(length * 8) + 1);
+    int codedDataLength = (length * 8) + verifyingBits;
+    char *hammingBitArray = new char[codedDataLength];
 
-    CheckSum test = 14;
-    data.append(sizeof(checksum), checksum);
-    CheckSum check = CalculateChecksum(data.c_str(), data.size());
+    int cont = 0;
+    int power = 0;
+    for (int i = 1; i <= codedDataLength; ++i) {
+        if (pow(2, power) == i) {
+            hammingBitArray[i - 1] = 0;
+            std::cout << "Hello " << i << std::endl;
+            power++;
+        } else {
+            hammingBitArray[i - 1] = bitData[cont++];
+        }
+    }
 
-    auto iCheckSum = CalculateChecksum(data.c_str(), data.size());
+    std::vector<std::vector<int>> decomposedValues(power);
+    for (int i = 0; i < codedDataLength; ++i) {
+        printf("\nHAMMING: %d", hammingBitArray[i]);
+        if (log2(i + 1) == (int) log2(i + 1))continue;
+        int *values = decomposeValues(i + 1, cont);
+        for (int j = 0; j < cont; ++j) {
+            std::cout << log2(values[j]) << std::endl;
+            decomposedValues[log2(values[j])].push_back(i);
+        }
+    }
 
-    std::cout << checksum << std::endl;
+    for (int i = 0; i < decomposedValues.size(); ++i) {
+        printf("\nDecomposed with %d: ", (int) pow(2, i));
+        for (int j = 0; j < decomposedValues[i].size(); ++j) {
+            printf("\n%d", decomposedValues[i][j]);
+        }
+    }
 
-    std::cout << invertedCheckSum << std::endl;
 
-    std::cout << iCheckSum << std::endl;
+    for (int i = 0; i < codedDataLength; ++i) {
+        if (log2(i + 1) != (int) log2(i + 1))continue;
+        int sign = 1;
+        for (int j = 0; j < decomposedValues[log2(i + 1)].size(); ++j) {
+            int val = hammingBitArray[decomposedValues[log2(i + 1)][j]];
+            hammingBitArray[i] += val * sign;
+            if (val == 1)
+                sign = -sign;
+        }
+    }
 
-    //assert (iCheckSum == 0);
+    for (int i = 0; i < codedDataLength; ++i) {
+        printf("\nHAMMING: %d", hammingBitArray[i]);
+    }
 
 }
