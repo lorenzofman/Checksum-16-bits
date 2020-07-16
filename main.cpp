@@ -6,19 +6,22 @@
 #include <cmath>
 #include <vector>
 
-char *convertToBitArray(char *data, int length) {
-    char *bitData = new char[length * sizeof(char)];
+char *convertToBitArray(const char *data, int length)
+{
+    char *bitData = new char[length * sizeof(char) * 8];
 
-    for (int i = 0; i < length; ++i) {
-        printf("\n%d", data[i]);
-        for (int bit = 0; bit < 8; ++bit) {
+    for (int i = 0; i < length; ++i)
+    {
+        for (int bit = 0; bit < 8; ++bit)
+        {
             bitData[(i * 8) + bit] = (unsigned char) ((data[i] << bit)) >> 7;
         }
     }
     return bitData;
 }
 
-int *decomposeValues(int value, int &cont) {
+int *decomposeValues(int value, int &cont)
+{
     int bitAmount = floor(log2(value)) + 1;
     int *decomposed = new int[bitAmount];
     printf("\ndecomposing: %d", value);
@@ -35,13 +38,12 @@ int *decomposeValues(int value, int &cont) {
 }
 
 int main() {
-    int length = 0;
-    printf("\nInsert desired length: ");
-    scanf("%d", &length);
-    char *data = new char[length];
-    printf("\nInsert data: ");
-    scanf("%s", data);
 
+	std::string str;
+	std::cout << "Insert data: ";
+	std::cin >> str;
+	int length = str.length();
+	auto data = str.c_str();
     char *bitData = convertToBitArray(data, length);
     for (int i = 0; i < length * 8; ++i) {
         printf("\n%d", bitData[i]);
@@ -73,9 +75,11 @@ int main() {
         }
     }
 
-    for (int i = 0; i < decomposedValues.size(); ++i) {
+    for (int i = 0; i < decomposedValues.size(); ++i)
+    {
         printf("\nDecomposed with %d: ", (int) pow(2, i));
-        for (int j = 0; j < decomposedValues[i].size(); ++j) {
+        for (int j = 0; j < decomposedValues[i].size(); ++j)
+        {
             printf("\n%d", decomposedValues[i][j]);
         }
     }
