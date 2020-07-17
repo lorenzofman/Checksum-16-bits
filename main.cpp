@@ -1,89 +1,85 @@
 #include <iostream>
 #include <cassert>
 #include <string>
-#include <stdio.h>
-#include <stdlib.h>
 #include <cmath>
 #include <vector>
 
-char *convertToBitArray(const char *data, int length)
+bool getBit(char c, unsigned int i)
 {
-    char *bitData = new char[length * sizeof(char) * 8];
+	unsigned int bit = ((unsigned char) c >> (7u - i));
+	unsigned int masked = bit & 1u;
+	return masked > 0;
+}
 
+bool* convertToBitArray(const char *data, int length)
+{
+    bool* bitData = new bool[length * 8];
     for (int i = 0; i < length; ++i)
     {
-        for (int bit = 0; bit < 8; ++bit)
+		for (int bit = 0; bit < 8; ++bit)
         {
-            bitData[(i * 8) + bit] = (unsigned char) ((data[i] << bit)) >> 7;
-        }
-    }
+            bitData[i * 8 + bit] = getBit(data[i], bit);
+		}
+	}
     return bitData;
 }
 
-int *decomposeValues(int value, int &cont)
+int* decomposeValues(int value, int &cont)
 {
-    int bitAmount = floor(log2(value)) + 1;
+    int bitAmount = (int) floor(log2(value)) + 1;
     int *decomposed = new int[bitAmount];
-    printf("\ndecomposing: %d", value);
     cont = 0;
     for (int i = 0; value > 0; i++) {
         int b = value % 2;
         if (b == 1) {
             decomposed[cont++] = pow(2, i);
-            printf("\ndec: %d", decomposed[cont]);
         }
         value = value / 2;
     }
     return decomposed;
 }
 
-int main() {
-
+int main()
+{
 	std::string str;
+
 	std::cout << "Insert data: ";
-	std::cin >> str;
+	getline(std::cin, str);
+
 	int length = str.length();
 	auto data = str.c_str();
-    char *bitData = convertToBitArray(data, length);
-    for (int i = 0; i < length * 8; ++i) {
-        printf("\n%d", bitData[i]);
-    }
+
+	auto bitData = convertToBitArray(data, length);
+
     int verifyingBits = ceil(sqrt(length * 8) + 1);
+
     int codedDataLength = (length * 8) + verifyingBits;
-    char *hammingBitArray = new char[codedDataLength];
+
+    bool* hammingBitArray = new bool[codedDataLength];
 
     int cont = 0;
     int power = 0;
-    for (int i = 1; i <= codedDataLength; ++i) {
-        if (pow(2, power) == i) {
-            hammingBitArray[i - 1] = 0;
-            std::cout << "Hello " << i << std::endl;
-            power++;
-        } else {
-            hammingBitArray[i - 1] = bitData[cont++];
-        }
-    }
+    for (int i = 1; i <= codedDataLength; ++i)
+    {
+		if (pow(2, power) != i)
+		{
+			hammingBitArray[i - 1] = bitData[cont++];
+		}
+		else
+		{
+			hammingBitArray[i - 1] = false;
+			power++;
+		}
+	}
 
     std::vector<std::vector<int>> decomposedValues(power);
     for (int i = 0; i < codedDataLength; ++i) {
-        printf("\nHAMMING: %d", hammingBitArray[i]);
         if (log2(i + 1) == (int) log2(i + 1))continue;
         int *values = decomposeValues(i + 1, cont);
         for (int j = 0; j < cont; ++j) {
-            std::cout << log2(values[j]) << std::endl;
             decomposedValues[log2(values[j])].push_back(i);
         }
     }
-
-    for (int i = 0; i < decomposedValues.size(); ++i)
-    {
-        printf("\nDecomposed with %d: ", (int) pow(2, i));
-        for (int j = 0; j < decomposedValues[i].size(); ++j)
-        {
-            printf("\n%d", decomposedValues[i][j]);
-        }
-    }
-
 
     for (int i = 0; i < codedDataLength; ++i) {
         if (log2(i + 1) != (int) log2(i + 1))continue;
@@ -96,8 +92,10 @@ int main() {
         }
     }
 
-    for (int i = 0; i < codedDataLength; ++i) {
-        printf("\nHAMMING: %d", hammingBitArray[i]);
+    for (int i = 0; i < codedDataLength; ++i)
+    {
+		std::cout << (hammingBitArray[i] ? 1 : 0);
     }
 
+    std::cout << std::endl;
 }
